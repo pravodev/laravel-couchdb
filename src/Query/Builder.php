@@ -220,12 +220,14 @@ class Builder extends BaseBuilder
         $direction = 'asc';
 
         //CouchDB 2.0 currently only support a single direction for all fields
-        if (count($this->orders)) {
-            $direction = array_unique(array_values($this->orders));
-            if (count($direction) > 1) {
-                throw new QueryException('Sort currently only support a single direction for all fields.');
+        if($this->orders !== null){
+            if (count($this->orders)) {
+                $direction = array_unique(array_values($this->orders));
+                if (count($direction) > 1) {
+                    throw new QueryException('Sort currently only support a single direction for all fields.');
+                }
+                list($direction) = $direction;
             }
-            list($direction) = $direction;
         }
 
         //always sort per type first
@@ -238,7 +240,7 @@ class Builder extends BaseBuilder
     {
         $fields = $this->getSort();
         $name = $this->resolveIndexName($fields);
-
+        
         return $this->collection->createMangoIndex($fields, $name) ? $name : false;
     }
 
@@ -265,7 +267,6 @@ class Builder extends BaseBuilder
         foreach ($fields as $key => $field) {
             $sort[] = key($field).':'.current($field);
         }
-
         return implode('&', $sort);
     }
 
@@ -413,8 +414,9 @@ class Builder extends BaseBuilder
 
     public function getFindEndpoint($columns = array(), $create_index = true)
     {
+        // dd($this->collection);
         $results = $this->collection->find($this->getMangoQuery($columns));
-
+        
         if ($results->status != 200) {
             //No index found when sorting values
             //500 for CouchDB < 2.1.0;
@@ -433,7 +435,7 @@ class Builder extends BaseBuilder
         }
 
         $results = $results->body['docs'];
-
+        
         $collections = $this->useCollections ? new Collection($results) : $results;
 
         return $collections;

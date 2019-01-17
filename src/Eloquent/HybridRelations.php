@@ -66,11 +66,15 @@ trait HybridRelations
         return new MorphOne($instance->newQuery(), $this, $type, $id, $localKey);
     }
 
-    public function morphToMany($related, $name, $table = null, $foreignKey = null, $relatedKey = null, $inverse = false)
+    public function morphToMany($related, $name, $table = null, $foreignPivotKey = null,
+                                $relatedPivotKey = null, $parentKey = null,
+                                $relatedKey = null, $inverse = false)
     {
       // Check if it is a relation with an original model.
       if (!is_subclass_of($related, \Robsonvn\CouchDB\Eloquent\Model::class)) {
-          return parent::morphToMany($related, $name, $table, $foreignKey, $relatedKey, $inverse);
+          return parent::morphToMany($related, $name, $table, $foreignPivotKey, 
+                                     $relatedPivotKey, $parentKey,
+                                     $relatedKey, $inverse);
       }
 
       $caller = $this->guessBelongsToManyRelation();
@@ -80,9 +84,9 @@ trait HybridRelations
       // instances, as well as the relationship instances we need for these.
       $instance = $this->newRelatedInstance($related);
 
-      $foreignKey = $foreignKey ?: $name.'_id';
+      $foreignPivotKey = $foreignPivotKey ?: $name.'_id';
 
-      $relatedKey = $relatedKey ?: $instance->getForeignKey();
+      $relatedPivotKey = $relatedPivotKey ?: $instance->getForeignKey();
 
       // Now we're ready to create a new query builder for this related model and
       // the relationship instances for this relation. This relations will set
@@ -206,7 +210,7 @@ trait HybridRelations
      *
      * @return \Illuminate\Database\Eloquent\Relations\MorphTo
      */
-    public function morphTo($name = null, $type = null, $id = null)
+    public function morphTo($name = null, $type = null, $id = null, $ownerKey = null)
     {
         // If no name is provided, we will use the backtrace to get the function name
         // since that is most likely the name of the polymorphic interface. We can
